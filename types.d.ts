@@ -95,6 +95,13 @@ class CollectionPlugin {
     public getConfiguration(): PluginConfiguration;
     /**
      * @public
+     * Get the name of the collection
+     *
+     * @returns {string}
+     */
+    public getName(): string;
+    /**
+     * @public
      *
      * Adds a navigation button to the collection's panel navigation bar
      * @param {Object} options Navigation button options
@@ -215,6 +222,14 @@ class DataAPI {
     public getAllRecords(): PluginRecord[];
     /**
      * @public
+     * Create a new record
+     *
+     * @param {string} title
+     * @returns {string?} - guid of new record
+     */
+    public createNewRecord(title: string): string | null;
+    /**
+     * @public
      * Get a record by its GUID
      *
      * @param {string} guid
@@ -258,6 +273,26 @@ class DataAPI {
      */
     public getActiveUsers(): PluginUser[];
 }
+
+/** @type {EnumColors} */
+const ENUM_COLORS: EnumColors;
+
+type EnumColors = {
+    red: "0";
+    orange: "1";
+    green: "2";
+    cyan: "3";
+    blue: "4";
+    purple: "5";
+    pink: "6";
+    fuchsia: "7";
+    rose: "8";
+    stone: "9";
+    teal: "10";
+    sky: "11";
+    indigo: "12";
+    zinc: "13";
+};
 
 namespace ExampleConfigurationJSON {
     let name: string;
@@ -595,6 +630,99 @@ namespace ExampleConfigurationJSON {
  */
 type IconName = string;
 
+const PLUGIN_LINE_ITEM_SEGMENT_TYPE_BOLD: "bold";
+
+const PLUGIN_LINE_ITEM_SEGMENT_TYPE_CODE: "code";
+
+const PLUGIN_LINE_ITEM_SEGMENT_TYPE_DATETIME: "datetime";
+
+const PLUGIN_LINE_ITEM_SEGMENT_TYPE_HASHTAG: "hashtag";
+
+const PLUGIN_LINE_ITEM_SEGMENT_TYPE_ICON: "icon";
+
+const PLUGIN_LINE_ITEM_SEGMENT_TYPE_ITALIC: "italic";
+
+const PLUGIN_LINE_ITEM_SEGMENT_TYPE_LINK: "link";
+
+const PLUGIN_LINE_ITEM_SEGMENT_TYPE_LINKOBJ: "linkobj";
+
+const PLUGIN_LINE_ITEM_SEGMENT_TYPE_MENTION: "mention";
+
+const PLUGIN_LINE_ITEM_SEGMENT_TYPE_REF: "ref";
+
+/**
+ * @typedef {PLUGIN_LINE_ITEM_TYPE_COLLECTION|
+ * PLUGIN_LINE_ITEM_TYPE_GLOBAL_PLUGIN|
+ * PLUGIN_LINE_ITEM_TYPE_RECORD|
+ * PLUGIN_LINE_ITEM_TYPE_EMPTY|
+ * PLUGIN_LINE_ITEM_TYPE_ERROR|
+ * PLUGIN_LINE_ITEM_TYPE_BR|
+ * PLUGIN_LINE_ITEM_TYPE_TEXT|
+ * PLUGIN_LINE_ITEM_TYPE_TASK|
+ * PLUGIN_LINE_ITEM_TYPE_HEADING|
+ * PLUGIN_LINE_ITEM_TYPE_ASCII_BANNER|
+ * PLUGIN_LINE_ITEM_TYPE_QUOTE|
+ * PLUGIN_LINE_ITEM_TYPE_BLOCK|
+ * PLUGIN_LINE_ITEM_TYPE_OLIST|
+ * PLUGIN_LINE_ITEM_TYPE_ULIST|
+ * PLUGIN_LINE_ITEM_TYPE_IMAGE|
+ * PLUGIN_LINE_ITEM_TYPE_FILE|
+ * PLUGIN_LINE_ITEM_TYPE_REF|
+ * PLUGIN_LINE_ITEM_TYPE_TABLE|
+ * PLUGIN_LINE_ITEM_TYPE_TABLE_CELL|
+ * PLUGIN_LINE_ITEM_TYPE_TABLE_ROW|
+ * PLUGIN_LINE_ITEM_TYPE_TRANSCLUSION|
+ * PLUGIN_LINE_ITEM_TYPE_QUERY|
+ * PLUGIN_LINE_ITEM_TYPE_MEDIA} PluginLineItemType
+ */
+const PLUGIN_LINE_ITEM_SEGMENT_TYPE_TEXT: "text";
+
+const PLUGIN_LINE_ITEM_TYPE_ASCII_BANNER: "ascii-banner";
+
+const PLUGIN_LINE_ITEM_TYPE_BLOCK: "block";
+
+const PLUGIN_LINE_ITEM_TYPE_BR: "br";
+
+const PLUGIN_LINE_ITEM_TYPE_COLLECTION: "app";
+
+const PLUGIN_LINE_ITEM_TYPE_EMPTY: "empty";
+
+const PLUGIN_LINE_ITEM_TYPE_ERROR: "error";
+
+const PLUGIN_LINE_ITEM_TYPE_FILE: "file";
+
+const PLUGIN_LINE_ITEM_TYPE_GLOBAL_PLUGIN: "gplugin";
+
+const PLUGIN_LINE_ITEM_TYPE_HEADING: "heading";
+
+const PLUGIN_LINE_ITEM_TYPE_IMAGE: "image";
+
+const PLUGIN_LINE_ITEM_TYPE_MEDIA: "media";
+
+const PLUGIN_LINE_ITEM_TYPE_OLIST: "olist";
+
+const PLUGIN_LINE_ITEM_TYPE_QUERY: "query";
+
+const PLUGIN_LINE_ITEM_TYPE_QUOTE: "quote";
+
+const PLUGIN_LINE_ITEM_TYPE_RECORD: "document";
+
+const PLUGIN_LINE_ITEM_TYPE_REF: "ref";
+
+const PLUGIN_LINE_ITEM_TYPE_TABLE: "table";
+
+const PLUGIN_LINE_ITEM_TYPE_TABLE_CELL: "table-cell";
+
+const PLUGIN_LINE_ITEM_TYPE_TABLE_ROW: "table-row";
+
+const PLUGIN_LINE_ITEM_TYPE_TASK: "task";
+
+const PLUGIN_LINE_ITEM_TYPE_TEXT: "text";
+
+const PLUGIN_LINE_ITEM_TYPE_TRANSCLUSION: "transclusion";
+
+const PLUGIN_LINE_ITEM_TYPE_ULIST: "ulist";
+
 class PluginCollectionAPI extends PluginPluginAPIBase {
     /**
      * @public
@@ -686,9 +814,9 @@ type PluginConfiguration = {
         action: CollectionPrimaryAction;
     };
     /**
-     * - Banner to use as banner for all items in this collection, unless item has override
+     * - Override to use as collection's default banner. Null by default (use banner image user selects in Change Banner dialog).
      */
-    default_banner: PropertyFileValue | null;
+    default_banner?: PropertyFileValue | null;
     views: CollectionView[];
     /**
      * - [PropertyField,]
@@ -717,7 +845,7 @@ type PluginConfiguration = {
     /**
      * - custom configuration for user's plugin code (like API keys and so on)
      */
-    custom: {
+    custom?: {
         [x: string]: any;
     };
     home: boolean;
@@ -822,6 +950,89 @@ class PluginGlobalPluginAPI extends PluginPluginAPIBase {
      */
     public getName(): string;
 }
+
+/**
+ * @typedef {{ [key: string]: any }} PluginLineItemProps
+ */
+class PluginLineItem {
+
+    /** @type {string} */
+    guid: string;
+    /** @type {PluginLineItemType} */
+    type: PluginLineItemType;
+    /** @type {PluginRecord} */
+    record: PluginRecord;
+    /** @type {string?} */
+    parent_guid: string | null;
+    /** @type {PluginLineItem[]} */
+    children: PluginLineItem[];
+    /** @type {PluginLineItemSegment[]} */
+    segments: PluginLineItemSegment[];
+    /** @type {PluginLineItemProps?} */
+    props: PluginLineItemProps | null;
+    _plugin: any;
+    _item: any;
+    /**
+     * @public
+     * Set the segments of the line item
+     *
+     * @param {PluginLineItemSegment[]} segments
+     */
+    public setSegments(segments: PluginLineItemSegment[]): void;
+
+    /**
+     * @returns {Date?}
+     */
+    getCreatedAt(): Date | null;
+    /**
+     * @returns {Date?}
+     */
+    getUpdatedAt(): Date | null;
+    /**
+     * @returns {string?}
+     */
+    getCreatedByGuid(): string | null;
+    /**
+     * @returns {string?}
+     */
+    getUpdatedByGuid(): string | null;
+}
+
+type PluginLineItemProps = {
+    [key: string]: any;
+};
+
+/**
+ * @typedef {PLUGIN_LINE_ITEM_SEGMENT_TYPE_TEXT|
+     * PLUGIN_LINE_ITEM_SEGMENT_TYPE_BOLD|
+     * PLUGIN_LINE_ITEM_SEGMENT_TYPE_ITALIC|
+     * PLUGIN_LINE_ITEM_SEGMENT_TYPE_CODE|
+     * PLUGIN_LINE_ITEM_SEGMENT_TYPE_LINK|
+     * PLUGIN_LINE_ITEM_SEGMENT_TYPE_ICON|
+     * PLUGIN_LINE_ITEM_SEGMENT_TYPE_HASHTAG|
+     * PLUGIN_LINE_ITEM_SEGMENT_TYPE_MENTION|
+     * PLUGIN_LINE_ITEM_SEGMENT_TYPE_REF|
+     * PLUGIN_LINE_ITEM_SEGMENT_TYPE_LINKOBJ|
+     * PLUGIN_LINE_ITEM_SEGMENT_TYPE_DATETIME} PluginLineItemSegmentType
+ */
+/**
+ * Each line item can have multiple segments. Each segment is a piece of text with a type.
+ */
+class PluginLineItemSegment {
+    /**
+     * @param {string} type
+     * @param {string} text
+     */
+    constructor(type: string, text: string);
+    /** @type {PluginLineItemSegmentType} */
+    type: PluginLineItemSegmentType;
+    /** @type {string} */
+    text: string;
+}
+
+type PluginLineItemSegmentType = "text" | "bold" | "italic" | "code" | "link" | "icon" | "hashtag" | "mention" | "ref" | "linkobj" | "datetime";
+
+type PluginLineItemType = "app" | "gplugin" | "document" | "empty" | "error" | "br" | "text" | "task" | "heading" | "ascii-banner" | "quote" | "block" | "olist" | "ulist" | "image" | "file" | "ref" | "table" | "table-cell" | "table-row" | "transclusion" | "query" | "media";
 
 type PluginNavigationButton = {
     /**
@@ -1063,6 +1274,13 @@ class PluginRecord {
 
     /**
      * @public
+     * Get all records that reference this record or any of its line items.
+     *
+     * @returns {Promise<PluginRecord[]>}
+     */
+    public getBackReferenceRecords(): Promise<PluginRecord[]>;
+    /**
+     * @public
      * Get the name (title) of the record
      *
      * @returns {string}
@@ -1070,19 +1288,21 @@ class PluginRecord {
     public getName(): string;
     /**
      * @public
-     * Get the contents of the record as flat text.
+     * Create a new line item in this record
      *
-     * @returns {string}
+     * @param {PluginLineItem?} parentItem - null: use record as parent
+     * @param {PluginLineItem?} afterItem
+     * @param {PluginLineItemType} type
+     * @returns {Promise<PluginLineItem?>} - returns new line item, null when failed
      */
-    public getContents(): string;
+    public createLineItem(parentItem: PluginLineItem | null, afterItem: PluginLineItem | null, type: PluginLineItemType): Promise<PluginLineItem | null>;
     /**
      * @public
-     * Append contents to the record
+     * Get all line items in this record's document tree
      *
-     * @param {string} contents
-     * @returns {string}
+     * @returns {Promise<PluginLineItem[]>}
      */
-    public appendContents(contents: string): string;
+    public getLineItems(): Promise<PluginLineItem[]>;
     /**
      * @public
      * Get all properties of the record. If viewName is provided, only return properties that are visible
