@@ -396,6 +396,16 @@ namespace ExampleConfigurationJSON {
     }
 }
 
+const GALLERY_STYLE_COVER: "cover";
+
+const GALLERY_STYLE_COVER_BANNER: "cover-banner";
+
+const GALLERY_STYLE_COVER_BOOKS: "cover-books";
+
+const GALLERY_STYLE_PREVIEW: "preview";
+
+const GALLERY_STYLE_PREVIEW_FEATURED: "preview-featured";
+
 /**
  * Available icons:
  * "file-text": "Document",
@@ -1508,6 +1518,16 @@ class PluginViewContext {
     public getRecord(guid: string): PluginRecord | null;
     /**
      * @public
+     * Use wide layout with no margins and full-width content area.
+     */
+    public makeWideLayout(): void;
+    /**
+     * @public
+     * Use normal layout with margins and fixed-width content area.
+     */
+    public makeNormalLayout(): void;
+    /**
+     * @public
      * Whether the view supports creating new records.
      *
      * @returns {boolean}
@@ -1686,6 +1706,10 @@ type PropertyField = {
     read_only: boolean;
     choices?: PropertyChoiceOption[];
     min_length?: number;
+    /**
+     * - Format for PROP_TYPE_NUMBER: 'plain', 'formatted', or currency code ('USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'SEK', 'NOK'). Defaults to 'formatted'.
+     */
+    number_format?: string;
 };
 
 type PropertyFileValue = {
