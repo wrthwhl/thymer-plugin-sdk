@@ -274,6 +274,136 @@ class DataAPI {
     public getActiveUsers(): PluginUser[];
 }
 
+/**
+ * @public
+ * A class for working with dates and times in Thymer.
+ *
+ * ## How DateTimes work
+ *
+ * A DateTime can represent:
+ * - **Date only** — e.g. "January 15, 2024" (no time component)
+ * - **Date + time** — e.g. "January 15, 2024 at 2:30pm"
+ * - **Time only** — e.g. "2:30pm" (no date component)
+ * - **Date range** — e.g. "January 15 to January 20, 2024"
+ * - **Date+time range** — e.g. "January 15 at 9am to January 20 at 5pm"
+ *
+ * ## Timezones
+ *
+ * When a DateTime has a time component, that time is stored with a timezone.
+ * The timezone is automatically set to the browser's local timezone and cannot
+ * be changed via this API. When you read an existing DateTime that was created
+ * in a different timezone, the time is converted to your browser's timezone.
+ *
+ * Use `setTime(null)` to remove the time component (and timezone) and keep only the date.
+ * Use `setRangeTo(endDateTime)` to create a date range.
+ *
+ * @example
+ * // Date + time
+ * const dt = new DateTime(new Date(2024, 0, 15, 14, 30));
+ * record.prop("Due Date").set(dt.value());
+ *
+ * @example
+ * // Date only (remove time component)
+ * const dt = new DateTime(new Date(2024, 0, 15));
+ * dt.setTime(null);
+ * record.prop("Due Date").set(dt.value());
+ *
+ * @example
+ * // Modify time on existing DateTime
+ * const dt = new DateTime(new Date());
+ * dt.setTime(18, 0);   // Set time to 6pm
+ * dt.setTime(null);    // Remove time component
+ *
+ * @example
+ * // Date range (multi-day event)
+ * const start = new DateTime(new Date(2024, 0, 15));
+ * const end = new DateTime(new Date(2024, 0, 20));
+ * start.setRangeTo(end); // Creates a date range from Jan 15 to Jan 20
+ * record.prop("Event Period").set(start.value());
+ */
+class DateTime {
+    /**
+     * @public
+     * Create a new DateTime object.
+     *
+     * @param {Date|DateTimeValueObject|undefined} value -
+     *   - A Date object in browser's local timezone
+     *   - A DateTimeValue object
+     *   - undefined to use the current date and time
+     *
+     * @example
+     * const dt1 = new DateTime(); // Current date and time
+     * const dt2 = new DateTime(new Date(2024, 0, 15)); // Specific date
+     *
+     * // To get a DateTime from a property, use .datetime() instead:
+     * const dt3 = record.prop("Due Date").datetime();
+     */
+    constructor(value: Date | DateTimeValueObject | undefined);
+
+    /**
+     * @public
+     * Get the DateTimeValue that can be used with property.set().
+     *
+     * @returns {import("../../shared/datetime.js").DateTimeValue} - DateTimeValue object
+     *
+     * @example
+     * const dt = new DateTime(new Date());
+     * record.prop("Due Date").set(dt.value());
+     */
+    public value(): any;
+    /**
+     * @public
+     * Convert to a JavaScript Date in the browser's local timezone.
+     *
+     * @returns {Date}
+     */
+    public toDate(): Date;
+    /**
+     * @public
+     * Set or remove the time component of this DateTime.
+     *
+     * @param {number|null} hours - Hours (0-23), or null to remove the time component
+     * @param {number} [minutes] - Minutes (0-59), required when hours is not null
+     * @param {number} [seconds=0] - Seconds (0-59)
+     *
+     * @example
+     * const dt = new DateTime(new Date(2024, 0, 15));
+     * dt.setTime(14, 30);       // Set time to 2:30pm
+     * dt.setTime(9, 0);         // Set time to 9:00am
+     * dt.setTime(9, 0, 30);     // Set time to 9:00:30am
+     * dt.setTime(null);         // Remove time, keep only the date
+     */
+    public setTime(hours: number | null, minutes?: number, seconds?: number): this;
+    /**
+     * @public
+     * Set a date range from this DateTime to another DateTime.
+     *
+     * @param {DateTime} endDateTime - The end of the range (another DateTime object)
+     *
+     * @example
+     * const start = new DateTime(new Date(2024, 0, 15));
+     * const end = new DateTime(new Date(2024, 0, 20));
+     * start.setRangeTo(end); // Creates a range from Jan 15 to Jan 20
+     */
+    public setRangeTo(endDateTime: DateTime): this;
+    /**
+     * @public
+     * Set (or clear) the range end.
+     *
+     * @param {DateTime|null} endDateTime
+     */
+    public setRangeEnd(endDateTime: DateTime | null): this;
+}
+
+type DateTimeValueObject = {
+    d: string;
+    t?: {
+        t: string;
+        tz: any;
+    };
+    r?: DateTimeValueObject;
+};
+
 /** @type {EnumColors} */
 const ENUM_COLORS: EnumColors;
 
@@ -1372,11 +1502,26 @@ class PluginProperty {
     public setChoice(choiceName: string): boolean;
     /**
      * @public
-     * Get the property value as a date (in your browser local timezone), or null if a date value is not available.
+     * Get the property value as a JavaScript Date object (in your browser's local timezone),
+     * or null if a datetime value is not available. For date ranges, returns the start date only.
      *
      * @returns {Date?}
      */
     public date(): Date | null;
+    /**
+     * @public
+     * Get the property value as a DateTime object, or null if a datetime value is not available.
+     *
+     * @example
+     * const dt = record.prop("Due Date").datetime();
+     * if (dt) {
+     *     dt.setTime(null); // Remove time, keep date only
+     *     record.prop("Due Date").set(dt.value());
+     * }
+     *
+     * @returns {DateTime?}
+     */
+    public datetime(): DateTime | null;
 }
 
 class PluginRecord {
