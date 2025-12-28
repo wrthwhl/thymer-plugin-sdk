@@ -384,7 +384,7 @@ class DateTime {
      * Set or remove the time component of this DateTime.
      *
      * @param {number|null} hours - Hours (0-23), or null to remove the time component
-     * @param {number} [minutes] - Minutes (0-59), required when hours is not null
+     * @param {number} [minutes=0] - Minutes (0-59)
      * @param {number} [seconds=0] - Seconds (0-59)
      *
      * @example
