@@ -86,6 +86,7 @@ try {
 	} else {
 		console.error('❌ App not loaded in debugger instance');
 		console.error('Please open your app in the Chrome instance with debugging enabled');
+		console.error('If you still can\'t connect, make sure you don\'t have the Chrome Developer Tools open within your debug Chrome window.')
 		process.exit(1);
 	}
 } catch (error) {

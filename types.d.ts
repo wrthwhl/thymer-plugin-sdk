@@ -639,8 +639,10 @@ const GALLERY_STYLE_PREVIEW_FEATURED: "preview-featured";
  * "sunset": "Sunset",
  * "smart-home": "Smart home",
  * "skull": "Skull",
+ * "sock": "Sock",
  * "ship": "Ship",
  * "share": "Share",
+ * "shirt": "Shirt",
  * "scissors": "Scissors",
  * "ruler": "Ruler",
  * "rocket": "Rocket",
@@ -671,6 +673,7 @@ const GALLERY_STYLE_PREVIEW_FEATURED: "preview-featured";
  * "movie": "Movie",
  * "motorbike": "Motorbike",
  * "moon": "Moon",
+ * "mouse-2": "Mouse",
  * "microscope": "Microscope",
  * "cpu": "Microchip / CPU",
  * "map": "Map",
@@ -688,6 +691,7 @@ const GALLERY_STYLE_PREVIEW_FEATURED: "preview-featured";
  * "devices": "Devices",
  * "device-laptop": "Laptop",
  * "key": "Key",
+ * "keyboard": "Keyboard",
  * "device-gamepad": "Gamepad / Joystick",
  * "diamond": "Diamond",
  * "infinity": "Infinity",
@@ -700,6 +704,7 @@ const GALLERY_STYLE_PREVIEW_FEATURED: "preview-featured";
  * "abc": "Name",
  * "headphones": "Headphones",
  * "hammer": "Hammer",
+ * "hanger": "Hanger",
  * "piano": "Piano",
  * "gauge": "Gauge / Dial / Dashboard",
  * "bolt": "Energy / Bolt / Fuel",
@@ -913,12 +918,13 @@ type PluginBlockStyle = "" | "quote" | "warning" | "note" | "row";
 class PluginCollectionAPI extends PluginPluginAPIBase {
     /**
      * @public
-     * Get the code and config currently used by the plugin.
+     * Get the code, config, and CSS currently used by the plugin.
      *
-     * @returns {{code: string, json: PluginConfiguration}}
+     * @returns {{code: string, css: string, json: PluginConfiguration}}
      */
     public getExistingCodeAndConfig(): {
         code: string;
+        css: string;
         json: PluginConfiguration;
     };
     /**
@@ -1107,12 +1113,13 @@ type PluginDropdownOption = {
 class PluginGlobalPluginAPI extends PluginPluginAPIBase {
     /**
      * @public
-     * Get the code and config currently used by the plugin.
+     * Get the code, config, and CSS currently used by the plugin.
      *
-     * @returns {{code: string, json: PluginConfiguration}}
+     * @returns {{code: string, css: string, json: PluginConfiguration}}
      */
     public getExistingCodeAndConfig(): {
         code: string;
+        css: string;
         json: PluginConfiguration;
     };
     /**
@@ -1505,13 +1512,14 @@ class PluginPluginAPIBase {
 
     /**
      * @public
-     * Preview a plugin with the given code and config. Hot reloads the plugin without saving.
+     * Preview a plugin with the given code, CSS, and config. Hot reloads the plugin without saving.
      *
      * @param {PluginConfiguration} conf
      * @param {string} code
+     * @param {string} css
      * @param {boolean} showEditDialog - if true, open the code editor for the user to review
      */
-    public previewPlugin(conf: PluginConfiguration, code: string, showEditDialog: boolean): void;
+    public previewPlugin(conf: PluginConfiguration, code: string, css: string, showEditDialog: boolean): void;
     trashPlugin(): void;
     untrashPlugin(): void;
     /**
@@ -1534,7 +1542,7 @@ class PluginPluginAPIBase {
     public savePlugin(conf: PluginConfiguration, code: string): Promise<boolean>;
     /**
      * @public
-     * Save only the plugin configuration (not the code).
+     * Save only the plugin configuration (leave code and CSS unchanged)
      *
      * @param {PluginConfiguration} conf
      * @returns {Promise<boolean>}
@@ -1542,12 +1550,20 @@ class PluginPluginAPIBase {
     public saveConfiguration(conf: PluginConfiguration): Promise<boolean>;
     /**
      * @public
-     * Save only the plugin code (not the configuration).
+     * Save only the plugin code (leave configuration and CSS unchanged)
      *
      * @param {string} code
      * @returns {Promise<boolean>}
      */
     public saveCode(code: string): Promise<boolean>;
+    /**
+     * @public
+     * Save only the plugin CSS (leave code and configuration unchanged)
+     *
+     * @param {string} css
+     * @returns {Promise<boolean>}
+     */
+    public saveCSS(css: string): Promise<boolean>;
 }
 
 /**
