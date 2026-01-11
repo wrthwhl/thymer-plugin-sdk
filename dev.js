@@ -115,7 +115,7 @@ function push(jsCodeStr, jsonConfStr) {
 	}
 	
 	const codeWithName = jsCodeStr + '\n//# sourceURL=thymer-plugin.js';
-	const expr = `window.refreshPlugin(${JSON.stringify(jsonConfStr)}, ${JSON.stringify(codeWithName)}, "")`;  
+	const expr = `window.refreshPlugin(${JSON.stringify(codeWithName)}, ${JSON.stringify(jsonConfStr)})`;  
 	tab.Runtime.evaluate({expression: expr, awaitPromise: true})
 	.then((result) => {
 		if (result.result.type === 'object' && result.result.objectId) {
