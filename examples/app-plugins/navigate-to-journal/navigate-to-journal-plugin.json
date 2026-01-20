@@ -1,0 +1,6 @@
+{
+	"ver": 1,
+	"name": "Navigate to Journal",
+	"icon": "ti-calendar",
+	"description": "Click on status bar icon to open journal"
+}

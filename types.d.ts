@@ -984,29 +984,15 @@ const PLUGIN_LINE_ITEM_SEGMENT_TYPE_MENTION: "mention";
 const PLUGIN_LINE_ITEM_SEGMENT_TYPE_REF: "ref";
 
 /**
- * @typedef {PLUGIN_LINE_ITEM_TYPE_COLLECTION|
- * PLUGIN_LINE_ITEM_TYPE_GLOBAL_PLUGIN|
- * PLUGIN_LINE_ITEM_TYPE_RECORD|
- * PLUGIN_LINE_ITEM_TYPE_EMPTY|
- * PLUGIN_LINE_ITEM_TYPE_ERROR|
- * PLUGIN_LINE_ITEM_TYPE_BR|
- * PLUGIN_LINE_ITEM_TYPE_TEXT|
- * PLUGIN_LINE_ITEM_TYPE_TASK|
- * PLUGIN_LINE_ITEM_TYPE_HEADING|
- * PLUGIN_LINE_ITEM_TYPE_ASCII_BANNER|
- * PLUGIN_LINE_ITEM_TYPE_QUOTE|
- * PLUGIN_LINE_ITEM_TYPE_BLOCK|
- * PLUGIN_LINE_ITEM_TYPE_OLIST|
- * PLUGIN_LINE_ITEM_TYPE_ULIST|
- * PLUGIN_LINE_ITEM_TYPE_IMAGE|
- * PLUGIN_LINE_ITEM_TYPE_FILE|
- * PLUGIN_LINE_ITEM_TYPE_REF|
- * PLUGIN_LINE_ITEM_TYPE_TABLE|
- * PLUGIN_LINE_ITEM_TYPE_TABLE_CELL|
- * PLUGIN_LINE_ITEM_TYPE_TABLE_ROW|
- * PLUGIN_LINE_ITEM_TYPE_TRANSCLUSION|
- * PLUGIN_LINE_ITEM_TYPE_QUERY|
- * PLUGIN_LINE_ITEM_TYPE_MEDIA} PluginLineItemType
+ * @typedef {PLUGIN_TASK_STATUS_NONE|
+ * PLUGIN_TASK_STATUS_DONE|
+ * PLUGIN_TASK_STATUS_STARTED|
+ * PLUGIN_TASK_STATUS_WAITING|
+ * PLUGIN_TASK_STATUS_BILLABLE|
+ * PLUGIN_TASK_STATUS_IMPORTANT|
+ * PLUGIN_TASK_STATUS_DISCUSS|
+ * PLUGIN_TASK_STATUS_ALERT|
+ * PLUGIN_TASK_STATUS_STARRED} PluginTaskStatus
  */
 const PLUGIN_LINE_ITEM_SEGMENT_TYPE_TEXT: "text";
 
@@ -1055,6 +1041,49 @@ const PLUGIN_LINE_ITEM_TYPE_TEXT: "text";
 const PLUGIN_LINE_ITEM_TYPE_TRANSCLUSION: "transclusion";
 
 const PLUGIN_LINE_ITEM_TYPE_ULIST: "ulist";
+
+const PLUGIN_TASK_STATUS_ALERT: "alert";
+
+const PLUGIN_TASK_STATUS_BILLABLE: "billable";
+
+const PLUGIN_TASK_STATUS_DISCUSS: "discuss";
+
+const PLUGIN_TASK_STATUS_DONE: "done";
+
+const PLUGIN_TASK_STATUS_IMPORTANT: "important";
+
+/**
+ * @typedef {PLUGIN_LINE_ITEM_TYPE_COLLECTION|
+ * PLUGIN_LINE_ITEM_TYPE_GLOBAL_PLUGIN|
+ * PLUGIN_LINE_ITEM_TYPE_RECORD|
+ * PLUGIN_LINE_ITEM_TYPE_EMPTY|
+ * PLUGIN_LINE_ITEM_TYPE_ERROR|
+ * PLUGIN_LINE_ITEM_TYPE_BR|
+ * PLUGIN_LINE_ITEM_TYPE_TEXT|
+ * PLUGIN_LINE_ITEM_TYPE_TASK|
+ * PLUGIN_LINE_ITEM_TYPE_HEADING|
+ * PLUGIN_LINE_ITEM_TYPE_ASCII_BANNER|
+ * PLUGIN_LINE_ITEM_TYPE_QUOTE|
+ * PLUGIN_LINE_ITEM_TYPE_BLOCK|
+ * PLUGIN_LINE_ITEM_TYPE_OLIST|
+ * PLUGIN_LINE_ITEM_TYPE_ULIST|
+ * PLUGIN_LINE_ITEM_TYPE_IMAGE|
+ * PLUGIN_LINE_ITEM_TYPE_FILE|
+ * PLUGIN_LINE_ITEM_TYPE_REF|
+ * PLUGIN_LINE_ITEM_TYPE_TABLE|
+ * PLUGIN_LINE_ITEM_TYPE_TABLE_CELL|
+ * PLUGIN_LINE_ITEM_TYPE_TABLE_ROW|
+ * PLUGIN_LINE_ITEM_TYPE_TRANSCLUSION|
+ * PLUGIN_LINE_ITEM_TYPE_QUERY|
+ * PLUGIN_LINE_ITEM_TYPE_MEDIA} PluginLineItemType
+ */
+const PLUGIN_TASK_STATUS_NONE: "none";
+
+const PLUGIN_TASK_STATUS_STARRED: "starred";
+
+const PLUGIN_TASK_STATUS_STARTED: "started";
+
+const PLUGIN_TASK_STATUS_WAITING: "waiting";
 
 type PluginBlockStyle = "" | "quote" | "warning" | "note" | "row";
 
@@ -1107,6 +1136,38 @@ class PluginCollectionAPI extends PluginPluginAPIBase {
      * @returns {Promise<PluginRecord[]>}
      */
     public getAllRecords(): Promise<PluginRecord[]>;
+    /**
+     * @public
+     * Check if this collection is a Journal plugin.
+     *
+     * @returns {boolean}
+     */
+    public isJournalPlugin(): boolean;
+    /**
+     * @public
+     * Get a journal page record for a user on a specific date.
+     * Only works on Journal plugins - returns null for other collections.
+     *
+     * Journal pages are created lazily - the page is automatically created when first written to.
+     *
+     * @param {PluginUser} user - The user whose journal to get
+     * @param {DateTime} [date] - The date (defaults to today)
+     * @returns {Promise<PluginRecord|null>} - The journal page or null when not a journal plugin
+     *
+     * @example
+     * // Get all collections, find the journal, get next week's record
+     * const collections = await this.data.getAllCollections();
+     * const journal = collections.find(c => c.isJournalPlugin());
+     * if (journal) {
+     *     const user = this.data.getActiveUsers()[0];
+     *     const record = await journal.getJournalRecord(user, DateTime.parseDateTimeString('next week'));
+     *     if (record) {
+     *         const line = await record.createLineItem(null, null, 'task');
+     *         line.setSegments([{type: 'text', text: 'Plan for next week'}]);
+     *     }
+     * }
+     */
+    public getJournalRecord(user: PluginUser, date?: DateTime): Promise<PluginRecord | null>;
 }
 
 type PluginCommandPaletteCommand = {
@@ -1349,6 +1410,39 @@ class PluginLineItem {
     getUpdatedByGuid(): string | null;
     /**
      * @public
+     * Get the task status for task line items.
+     *
+     * @returns {PluginTaskStatus|null} The task status, or null if not a task
+     *
+     * @example
+     * if (lineItem.getTaskStatus() === PLUGIN_TASK_STATUS_DONE) {
+     *     console.log('Task is completed');
+     * }
+     */
+    public getTaskStatus(): PluginTaskStatus | null;
+    /**
+     * @public
+     * Check if this task is completed.
+     *
+     * @returns {boolean|null} true if completed, false if not completed, null if not a task
+     *
+     * @example
+     * const completedTasks = lineItems.filter(item => item.isTaskCompleted() === true);
+     */
+    public isTaskCompleted(): boolean | null;
+    /**
+     * @public
+     * Set the task status for task line items.
+     *
+     * @param {PluginTaskStatus} status - The status to set
+     * @returns {Promise<boolean>} true if successful, false if not a task or invalid status
+     *
+     * @example
+     * await lineItem.setTaskStatus(PLUGIN_TASK_STATUS_IMPORTANT);
+     */
+    public setTaskStatus(status: PluginTaskStatus): Promise<boolean>;
+    /**
+     * @public
      * Set a single meta property on the line item.
      *
      * @param {string} prop - The property key
@@ -1453,6 +1547,23 @@ class PluginLineItem {
      * @returns {Promise<boolean>} true if deleted, false if deletion failed (e.g., has children)
      */
     public delete(): Promise<boolean>;
+    /**
+     * @public
+     * Move this line item to a new location.
+     *
+     * @param {PluginLineItem|null} newParent - new parent item, or null to keep the same parent
+     * @param {PluginLineItem|null} afterItem - insert after this item, or null to insert as first child
+     * @returns {Promise<PluginLineItem|null>} the moved item with updated data, or null if move failed
+     *
+     * @example
+     * // Move item to be the first child of another item
+     * const movedItem = await lineItem.move(parentItem, null);
+     *
+     * @example
+     * // Move item to be after a sibling (reorder within same parent)
+     * const movedItem = await lineItem.move(null, siblingItem);
+     */
+    public move(newParent: PluginLineItem | null, afterItem: PluginLineItem | null): Promise<PluginLineItem | null>;
     #private;
 }
 
@@ -1588,6 +1699,25 @@ class PluginPanel {
      * @param {string} myPanelId - the ID of the panel to navigate to
      */
     public navigateToCustomType(myPanelId: string): void;
+    /**
+     * @public
+     * Navigate this panel to a user's journal page for a specific date.
+     *
+     * @param {PluginUser} user - The user whose journal to open
+     * @param {DateTime} [date] - The date (defaults to today)
+     * @returns {boolean} - True if navigation was successful, false if no journal plugin is active
+     *
+     * @example
+     * // Navigate to a user's journal for today
+     * const user = this.data.getActiveUsers()[0];
+     * const panel = this.ui.getActivePanel();
+     * panel.navigateToJournal(user, DateTime.parseDateTimeString('today'));
+     *
+     * @example
+     * // Navigate to journal for last monday
+     * panel.navigateToJournal(user, DateTime.parseDateTimeString('last monday'));
+     */
+    public navigateToJournal(user: PluginUser, date?: DateTime): boolean;
     /**
      * @public
      * Get the panel's DOM element
@@ -1982,6 +2112,8 @@ type PluginStatusBarItem = {
     show: () => void;
     getElement: () => HTMLElement | null;
 };
+
+type PluginTaskStatus = "none" | "done" | "started" | "waiting" | "billable" | "important" | "discuss" | "alert" | "starred";
 
 type PluginToaster = {
     /**
