@@ -14,7 +14,7 @@
  * - Navigating to journal pages with navigateToJournal()
  */
 
-export class Plugin extends AppPlugin {
+class Plugin extends AppPlugin {
 
 	onLoad() {
 		this.ui.addStatusBarItem({
